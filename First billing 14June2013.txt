@@ -1,0 +1,15 @@
+I have tried two slightly different visual representations.
+"Conflict management" is the central skill! 
+Now I would switch to the other visual representation.
+
+The light blue circle is the central skill "conflict management". The dark blue circle are degree one connections. The orange circles are degree two connections.
+I could not get the click and position change fucntionality yet and as that required effort to be invested, have written an email to you. Pls check - thanks!
+I'd now show you the source code quickly.
+These two index.html & index - copy.html are the files that produce the two visual versions.
+The skills.json file has the json data for the skills and also the relation ship between skills.
+
+That's all for today. Thanks!
+
+
+
+
