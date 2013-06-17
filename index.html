@@ -30,8 +30,8 @@ line {
 -->
 </style>
 <body>
-<form action="demo_form.jsp" method="get">Enter Skill
-<input list="skills" name="skills">
+Enter Skill
+<input list="skills" name="skills" id="myField">
 <datalist id="skills">
   <option value="Accept responsibility">
   <option value="Ambitious">
@@ -112,8 +112,8 @@ line {
   <option value="Reporting">
 
 </datalist>
-<input type="submit">
-</form>
+
+<!--<input type="button" id="button" value="Submit">-->
 
 <script>
 var w = 1350,
@@ -132,9 +132,10 @@ d3.json("skills.json", function(json) {
         return fill(d.group);
     }).style("stroke", function(d) {
         return d3.rgb(fill(d.group)).darker();
-    }).call(force.drag).on("mouseover", fade(.1)).on("mouseout", fade(1)).on("click", modify());;; /*d3.select(this)*/
+    }).call(force.drag).on("click", modify());;; 
+	//}).call(force.drag).on("mouseover", fade(.1)).on("mouseout", fade(1)).on("click", modify());;; 
 	
-  var labels = svg.selectAll("text")                                      //***NEW
+  var labels = svg.selectAll("text")                                      
 		 			    .data(json.nodes)
 		 			    .enter()
 		 			    .append("text")
@@ -164,6 +165,7 @@ d3.json("skills.json", function(json) {
     function isEqual(a,b){
     	return a.index == b.index;
     }
+	
     function tick() {
         node.attr("cx", function(d) {
             return d.x = Math.max(r, Math.min(w - r, d.x));
@@ -182,15 +184,40 @@ d3.json("skills.json", function(json) {
             return d.target.y;
         });
 		
-				labels.attr("x", function(d) { return d.x; })        // **NEW**
-                                .attr("y", function(d) { return d.y; }); 
+		labels.attr("x", function(d) { return d.x; })        // **NEW**
+              .attr("y", function(d) { return d.y; }); 
     }
+	
+	/*function is called for re-draw of graph after a node is clicked */
+	function tick1(clickedNodeIndex) {
+		//alert(clickedNodeIndex);
+        node.attr("cx", function(d) {
+		if (d.index == clickedNodeIndex){ return d.x=640;}
+			else {return d.x = Math.max(r, Math.min(w - r, d.x));}
+        }).attr("cy", function(d) {
+		if (d.index == clickedNodeIndex){ return d.y=300;}
+            else {return d.y = Math.max(r, Math.min(h - r, d.y));}
+        });
 
+        link.attr("x1", function(d) {
+            return d.source.x;
+        }).attr("y1", function(d) {
+            return d.source.y;
+        }).attr("x2", function(d) {
+            return d.target.x;
+        }).attr("y2", function(d) {
+            return d.target.y;
+        });
+		
+		labels.attr("x", function(d) { return d.x; })        // **NEW**
+              .attr("y", function(d) { return d.y; }); 
+    }
+	
+	/* this function is not used, just kept here for reference */
     function fade(opacity) {
         return function(d) {
             node.style("stroke-opacity", function(o) {
                 thisOpacity = isConnected(d, o) ? 1 : opacity;
-				
 				if(isEqual(d,o)){
                 	thisOpacity = 1;
                 }
@@ -204,36 +231,200 @@ d3.json("skills.json", function(json) {
         };
     }
 	
+	/* the function triggered by mouse-click */
     function modify() {
-				
         return function(d) {
-		
-				
+		   
+           node.style("stroke-opacity", function(o) {
+                thisOpacity = isConnected(d, o) ? 1 : 0;
+				if(isEqual(d,o)){
+                	thisOpacity = 1;
+                }
+                this.setAttribute('fill-opacity', thisOpacity);
+                return thisOpacity;
+            });
+
+            link.style("stroke-opacity", function(o) {
+                return o.source === d || o.target === d ? 1 : 0;
+            });			
+			
             node.style("fill", function(o) {
-				/*color the clicked node red*/
-				/*this.style("fill", "red");				*/
-				
 				/*recolor the connected nodes to blue and others to green*/
 				thisColor = isConnected(d, o) ? 'lightblue' : 'lightgreen';
-				
 				if(isEqual(d,o)){
 					thisColor = 'red';
 				}
-				
 				this.setAttribute('fill', thisColor);
 				
                 return thisColor;
+            });
+			
+			labels.style("fill", function(o) {
+				/*recolor the text connected nodes to blue and others to transparent*/
+				thisColor = isConnected(d, o) ? 'blue' : 'none';
+				if(isEqual(d,o)){
+					thisColor = 'blue';
+					var id = o.index;
+					//alert(skillid);
+					force.nodes(json.nodes).links(json.links).on("tick", tick1(id)).start();
+				}
+				this.setAttribute('fill', thisColor);
 				
-				/*reassign groups to layout*/
-				
-				
+                return thisColor;
 
             });
-
-
+			
+			
+ 
         };
     }
 });
+
+var my_field = document.getElementById('myField');
+var skill_list = [
+"Accept responsibility",
+"Ambitious",
+"Ask questions",
+"Assertive",
+"Assume responsibility",
+"Caring",
+"Comforting",
+"Communicating",
+"Competitive",
+"Competent",
+"Complete assignments",
+"Conflict management",
+"Conflict resolution",
+"Consulting",
+"Coordinating",
+"Counseling",
+"Creative",
+"Decision making",
+"Decisive",
+"Delegating",
+"Dependable",
+"Detail-oriented",
+"Developing rapport",
+"Diplomacy",
+"Diplomatic",
+"Direct others",
+"Diversity",
+"Efficiency",
+"Empathy",
+"Encouraging",
+"Enthusiastic",
+"Flexible",
+"Follow instructions",
+"Friendly",
+"Get along well with",
+"Get things done",
+"Goal setting",
+"Group facilitating",
+"Helping others",
+"Highly motivated",
+"Honesty",
+"Influence others",
+"Ingenious",
+"Initiate new tasks",
+"Inquiry",
+"Inspiring trust",
+"Instructing",
+"Integrity",
+"Intelligent",
+"Interviewing",
+"Inventive",
+"job",
+"Judgment",
+"Kind",
+"Learn quickly",
+"Listening",
+"Manage or direct others",
+"Mature",
+"Mediate problems",
+"Mediating",
+"Meet deadlines",
+"Mentoring",
+"Motivate people",
+"Motivating",
+"Multi-tasking",
+"Negotiate agreements",
+"Negotiating",
+"others",
+"Outgoing",
+"Patient",
+"Persistent",
+"Physically strong",
+"Planning",
+"Pleasant",
+"Problem solving",
+"Punctual",
+"Reporting"];
+
+      my_field.addEventListener("keyup", function (event) {
+          if (event.keyCode == 13) {
+              event.preventDefault();
+
+              if (my_field.value.length != 0) {
+                  //alert(my_field.value);
+				  alert(my_field.value);
+				  
+				  var skill_id = skill_list.indexOf(my_field.value);
+				  //alert(skill_id);
+				  modify_on_input(skill_id);
+                  // Run my specific process with my_field.value 
+                  my_field.value = '';
+              }
+          }
+      }, false);
+
+	/* the function triggered by mouse-click */
+    function modify_on_input(skillid) {
+        return function(d) {
+		   
+           node.style("stroke-opacity", function(o) {
+                thisOpacity = isConnected(d, o) ? 1 : 0;
+				if(isEqual(d,o)){
+                	thisOpacity = 1;
+                }
+                this.setAttribute('fill-opacity', thisOpacity);
+                return thisOpacity;
+            });
+
+            link.style("stroke-opacity", function(o) {
+                return o.source === d || o.target === d ? 1 : 0;
+            });			
+			
+            node.style("fill", function(o) {
+				/*recolor the connected nodes to blue and others to green*/
+				thisColor = isConnected(d, o) ? 'lightblue' : 'lightgreen';
+				if(isEqual(d,o)){
+					thisColor = 'red';
+				}
+				this.setAttribute('fill', thisColor);
+				
+                return thisColor;
+            });
+			
+			labels.style("fill", function(o) {
+				/*recolor the text connected nodes to blue and others to transparent*/
+				thisColor = isConnected(d, o) ? 'blue' : 'none';
+				if(isEqual(d,o)){
+					thisColor = 'blue';
+					var id = o.index;
+					alert(skillid);
+					force.nodes(json.nodes).links(json.links).on("tick", tick1(id)).start();
+				}
+				this.setAttribute('fill', thisColor);
+				
+                return thisColor;
+
+            });
+			
+			
+ 
+        };
+    }
+	
 </script>
   
 </body>
