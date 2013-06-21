@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-  <head>
-    <title>Skillset Layout</title>
-    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js"></script>
-    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.geom.js"></script>
-    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.layout.js"></script>
-	
-  </head>
+<head>
+<title>Skillset Layout</title>
 
-
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+</head>
 <style>
 circle {
   stroke-width: .1px;
@@ -32,6 +29,7 @@ line {
 <body>
 Enter Skill
 <input list="skills" name="skills" id="myField">
+<input type="button" value="Submit" onclick="searchFunction();"></div>
 <datalist id="skills">
   <option value="Accept responsibility">
   <option value="Ambitious">
@@ -84,7 +82,7 @@ Enter Skill
   <option value="Intelligent">
   <option value="Interviewing">
   <option value="Inventive">
-  <option value="job">
+  <option value="Job">
   <option value="Judgment">
   <option value="Kind">
   <option value="Learn quickly">
@@ -113,47 +111,54 @@ Enter Skill
 
 </datalist>
 
-<!--<input type="button" id="button" value="Submit">-->
-
 <script>
-var w = 1350,
-    h = 630,
-    r = 13,
-    fill = d3.scale.ordinal().range([ 'lightblue', 'red', 'lightgreen' ]);
-	
-var force = d3.layout.force().gravity(0.05).charge(-220).linkDistance(125).size([w, h]);
+  var w = 1350,
+      h = 630,
+      r = 13,
+      fill = d3.scale.ordinal().range([ 'lightblue', 'red', 'lightgreen' ]);
 
-var svg = d3.select("body").append("svg:svg").attr("width", w).attr("height", h);
+  var force = d3.layout.force()
+      .gravity(0.05)
+      .charge(-220)
+      .linkDistance(125)
+      .size([w, h]);
 
-d3.json("skills.json", function(json) {
-    var link = svg.selectAll("line").data(json.links).enter().append("svg:line");
+  var svg = d3.select("body").append("svg:svg")
+      .attr("width", w)
+      .attr("height", h);
 
-    var node = svg.selectAll("circle").data(json.nodes).enter().append("svg:circle").attr("r", r - .75).style("fill", function(d) {
-        return fill(d.group);
-    }).style("stroke", function(d) {
-        return d3.rgb(fill(d.group)).darker();
-    }).call(force.drag).on("click", modify());;; 
-	//}).call(force.drag).on("mouseover", fade(.1)).on("mouseout", fade(1)).on("click", modify());;; 
-	
-  var labels = svg.selectAll("text")                                      
-		 			    .data(json.nodes)
-		 			    .enter()
-		 			    .append("text")
-						.attr("font-family","sans-serif")
-						.attr("font-size","8px")
-						.attr("fill","blue")
-		 			    .attr({"x":function(d){return d.x;},
-		 					   "y":function(d){return d.y;}})
-		 			    .text(function(d){return d.name;})
-		 			    .call(force.drag);
-						
-	/*node.append("title")
-      .text(function(d) { return d.name; });*/
-	
+  d3.json("skills.json", function(json) {
+    
+      var link = svg.selectAll("line")
+          .data(json.links)
+        .enter().append("svg:line");
 
-    force.nodes(json.nodes).links(json.links).on("tick", tick).start();
+      var node = svg.selectAll("circle")
+          .data(json.nodes)
+        .enter().append("svg:circle")
+          .attr("id", function(d) { return d.name.replace(/ /g,"_").toLowerCase(); })  //add id to each individual circle to be able to select it later
+          .attr("r", r - .75).style("fill", function(d) { return fill(d.group); })
+          .style("stroke", function(d) { return d3.rgb(fill(d.group)).darker(); })
+          .call(force.drag)
+          .on("click", modify());
+
+      var labels = svg.selectAll("text")                                      
+          .data(json.nodes)
+        .enter().append("text")
+          .attr("font-family","sans-serif")
+          .attr("font-size","8px")
+          .attr("fill","blue")
+          .text( function(d) { return d.name; })
+          .call(force.drag);
+
+      force
+          .nodes(json.nodes)
+          .links(json.links)
+          .on("tick", tick)
+          .start();
 
     var linkedByIndex = {};
+    
     json.links.forEach(function(d) {
         linkedByIndex[d.source.index + "," + d.target.index] = 1;
     });
@@ -161,11 +166,11 @@ d3.json("skills.json", function(json) {
     function isConnected(a, b) {
         return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index];/* || a.index == b.index;*/
     }
-	
+
     function isEqual(a,b){
-    	return a.index == b.index;
+        return a.index === b.index;
     }
-	
+
     function tick() {
         node.attr("cx", function(d) {
             return d.x = Math.max(r, Math.min(w - r, d.x));
@@ -173,31 +178,6 @@ d3.json("skills.json", function(json) {
             return d.y = Math.max(r, Math.min(h - r, d.y));
         });
 
-			
-        link.attr("x1", function(d) {
-            return d.source.x;
-        }).attr("y1", function(d) {
-            return d.source.y;
-        }).attr("x2", function(d) {
-            return d.target.x;
-        }).attr("y2", function(d) {
-            return d.target.y;
-        });
-		
-		labels.attr("x", function(d) { return d.x; })        // **NEW**
-              .attr("y", function(d) { return d.y; }); 
-    }
-	
-	/*function is called for re-draw of graph after a node is clicked */
-	function tick1(clickedNodeIndex) {
-		//alert(clickedNodeIndex);
-        node.attr("cx", function(d) {
-		if (d.index == clickedNodeIndex){ return d.x=640;}
-			else {return d.x = Math.max(r, Math.min(w - r, d.x));}
-        }).attr("cy", function(d) {
-		if (d.index == clickedNodeIndex){ return d.y=300;}
-            else {return d.y = Math.max(r, Math.min(h - r, d.y));}
-        });
 
         link.attr("x1", function(d) {
             return d.source.x;
@@ -208,37 +188,50 @@ d3.json("skills.json", function(json) {
         }).attr("y2", function(d) {
             return d.target.y;
         });
-		
-		labels.attr("x", function(d) { return d.x; })        // **NEW**
+
+        labels.attr("x", function(d) { return d.x; })        
               .attr("y", function(d) { return d.y; }); 
     }
-	
-	/* this function is not used, just kept here for reference */
-    function fade(opacity) {
-        return function(d) {
-            node.style("stroke-opacity", function(o) {
-                thisOpacity = isConnected(d, o) ? 1 : opacity;
-				if(isEqual(d,o)){
-                	thisOpacity = 1;
-                }
-                this.setAttribute('fill-opacity', thisOpacity);
-                return thisOpacity;
-            });
 
-            link.style("stroke-opacity", function(o) {
-                return o.source === d || o.target === d ? 1 : opacity;
-            });
-        };
+    //function is called for re-draw of graph after a node is clicked 
+    function tick1(clickedNodeIndex) {
+
+        node
+            .attr("cx", function(d) {
+              if ( d.index === clickedNodeIndex) {
+                return d.x = 640;
+              } else {
+                return d.x = Math.max(r, Math.min(w - r, d.x));
+              }}
+            )
+            .attr("cy", function(d) {
+              if ( d.index === clickedNodeIndex) {
+                return d.y=300;
+              } else {
+                return d.y = Math.max(r, Math.min(h - r, d.y));
+              }}
+            );
+
+        link
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+
+        labels
+            .attr("x", function(d) { return d.x; })
+            .attr("y", function(d) { return d.y; }); 
     }
-	
-	/* the function triggered by mouse-click */
+
+    // the function triggered by mouse-click
     function modify() {
         return function(d) {
-		   
+
            node.style("stroke-opacity", function(o) {
+
                 thisOpacity = isConnected(d, o) ? 1 : 0;
-				if(isEqual(d,o)){
-                	thisOpacity = 1;
+                if(isEqual(d,o)){
+                    thisOpacity = 1;
                 }
                 this.setAttribute('fill-opacity', thisOpacity);
                 return thisOpacity;
@@ -246,186 +239,69 @@ d3.json("skills.json", function(json) {
 
             link.style("stroke-opacity", function(o) {
                 return o.source === d || o.target === d ? 1 : 0;
-            });			
-			
+            });         
+
             node.style("fill", function(o) {
-				/*recolor the connected nodes to blue and others to green*/
-				thisColor = isConnected(d, o) ? 'lightblue' : 'lightgreen';
-				if(isEqual(d,o)){
-					thisColor = 'red';
-				}
-				this.setAttribute('fill', thisColor);
-				
-                return thisColor;
-            });
-			
-			labels.style("fill", function(o) {
-				/*recolor the text connected nodes to blue and others to transparent*/
-				thisColor = isConnected(d, o) ? 'blue' : 'none';
-				if(isEqual(d,o)){
-					thisColor = 'blue';
-					var id = o.index;
-					//alert(skillid);
-					force.nodes(json.nodes).links(json.links).on("tick", tick1(id)).start();
-				}
-				this.setAttribute('fill', thisColor);
-				
-                return thisColor;
-
-            });
-			
-			
- 
-        };
-    }
-});
-
-var my_field = document.getElementById('myField');
-var skill_list = [
-"Accept responsibility",
-"Ambitious",
-"Ask questions",
-"Assertive",
-"Assume responsibility",
-"Caring",
-"Comforting",
-"Communicating",
-"Competitive",
-"Competent",
-"Complete assignments",
-"Conflict management",
-"Conflict resolution",
-"Consulting",
-"Coordinating",
-"Counseling",
-"Creative",
-"Decision making",
-"Decisive",
-"Delegating",
-"Dependable",
-"Detail-oriented",
-"Developing rapport",
-"Diplomacy",
-"Diplomatic",
-"Direct others",
-"Diversity",
-"Efficiency",
-"Empathy",
-"Encouraging",
-"Enthusiastic",
-"Flexible",
-"Follow instructions",
-"Friendly",
-"Get along well with",
-"Get things done",
-"Goal setting",
-"Group facilitating",
-"Helping others",
-"Highly motivated",
-"Honesty",
-"Influence others",
-"Ingenious",
-"Initiate new tasks",
-"Inquiry",
-"Inspiring trust",
-"Instructing",
-"Integrity",
-"Intelligent",
-"Interviewing",
-"Inventive",
-"job",
-"Judgment",
-"Kind",
-"Learn quickly",
-"Listening",
-"Manage or direct others",
-"Mature",
-"Mediate problems",
-"Mediating",
-"Meet deadlines",
-"Mentoring",
-"Motivate people",
-"Motivating",
-"Multi-tasking",
-"Negotiate agreements",
-"Negotiating",
-"others",
-"Outgoing",
-"Patient",
-"Persistent",
-"Physically strong",
-"Planning",
-"Pleasant",
-"Problem solving",
-"Punctual",
-"Reporting"];
-
-      my_field.addEventListener("keyup", function (event) {
-          if (event.keyCode == 13) {
-              event.preventDefault();
-
-              if (my_field.value.length != 0) {
-                  //alert(my_field.value);
-				  alert(my_field.value);
-				  
-				  var skill_id = skill_list.indexOf(my_field.value);
-				  //alert(skill_id);
-				  modify_on_input(skill_id);
-                  // Run my specific process with my_field.value 
-                  my_field.value = '';
-              }
-          }
-      }, false);
-
-	/* the function triggered by mouse-click */
-    function modify_on_input(skillid) {
-        return function(d) {
-		   
-           node.style("stroke-opacity", function(o) {
-                thisOpacity = isConnected(d, o) ? 1 : 0;
-				if(isEqual(d,o)){
-                	thisOpacity = 1;
+                //recolor the connected nodes to blue and others to green
+                thisColor = isConnected(d, o) ? 'lightblue' : 'lightgreen';
+                if(isEqual(d,o)){
+                    thisColor = 'red';
                 }
-                this.setAttribute('fill-opacity', thisOpacity);
-                return thisOpacity;
-            });
+                this.setAttribute('fill', thisColor);
 
-            link.style("stroke-opacity", function(o) {
-                return o.source === d || o.target === d ? 1 : 0;
-            });			
-			
-            node.style("fill", function(o) {
-				/*recolor the connected nodes to blue and others to green*/
-				thisColor = isConnected(d, o) ? 'lightblue' : 'lightgreen';
-				if(isEqual(d,o)){
-					thisColor = 'red';
-				}
-				this.setAttribute('fill', thisColor);
-				
                 return thisColor;
             });
-			
-			labels.style("fill", function(o) {
-				/*recolor the text connected nodes to blue and others to transparent*/
-				thisColor = isConnected(d, o) ? 'blue' : 'none';
-				if(isEqual(d,o)){
-					thisColor = 'blue';
-					var id = o.index;
-					alert(skillid);
-					force.nodes(json.nodes).links(json.links).on("tick", tick1(id)).start();
-				}
-				this.setAttribute('fill', thisColor);
-				
+
+            labels.style("fill", function(o) {
+                //recolor the text connected nodes to blue and others to transparent
+                thisColor = isConnected(d, o) ? 'blue' : 'none';
+                if(isEqual(d,o)){
+                    thisColor = 'blue';
+                    var id = o.index;
+
+                    //alert(id);
+                    force.nodes(json.nodes).links(json.links).on("tick", tick1(id)).start();
+                }
+                this.setAttribute('fill', thisColor);
+
                 return thisColor;
 
             });
-			
-			
- 
+
+
+
         };
     }
-	
+
+   });
+
+
+   //Get search box name
+   var my_field = document.getElementById('myField');
+
+   // jQuery capture event
+   jQuery.fn.d3Click = function () {
+     this.each(function (i, e) {
+       var evt = document.createEvent("MouseEvents");
+       evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+   
+       e.dispatchEvent(evt);
+     });
+   };   
+
+   // When "Submit" is pressed, the following function is run
+   function searchFunction() { 
+     if (my_field.value.length !== 0) {
+   
+       var fieldValue = my_field.value.replace(/ /g,"_").toLowerCase();
+
+       $("#negotiate_agreements")
+
+       $("#"+fieldValue).d3Click();
+     }
+   }
+
 </script>
-  
+
 </body>
 </html>
